@@ -130,11 +130,9 @@ if st.sidebar.checkbox("Use SIR Model"):
     # st.write(type(int(hourly_ratio[1])))
     for i in hourly_ratio:
         hourly_distribution.append(int(i))
-    st.write(hourly_distribution)
-    st.write(type(hourly_distribution))
+    # st.write(hourly_distribution)
+    # st.write(type(hourly_distribution))
     # a = np.array(hourly_distribution)
-    # st.write(type(a))
-    # st.write(a)
 
     p = sir.parameter(current_hospitalized, doubling_time, hospitalized_rate, infectious_days, market_share,
                       n_days, population, recovered, mitigation_date, relative_contact_rate, arriving_rate)
