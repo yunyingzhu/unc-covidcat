@@ -177,8 +177,6 @@ if st.sidebar.checkbox("Use SIR Model"):
 #                     "outbreak reduces the doubling time to 19.2 days, implying an effective R_t of 1.371.37
 #                     "and daily growth rate of 3.68%..")
 
-
-
 st.sidebar.subheader("ED")
 ed_mean = float(st.sidebar.text_input("Mean ED LOS (Hours)", value=7.5))
 valid_input_number(ed_mean)
@@ -187,7 +185,6 @@ valid_input_number(ed_std)
 ed_initial = float(st.sidebar.text_input("Current Census (Patients)", value=8, key="E"))
 valid_input_number(ed_initial)
 
-# st.markdown("Mean is `ed_mean`")
 
 if st.sidebar.checkbox("Click here to display results", key="A"):
     if ed_mean != 0 and ed_std != 0:
