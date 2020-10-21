@@ -214,10 +214,10 @@ def icu_run(ICU_length_of_stay_mean, ICU_length_of_stay_std, ICU_initial_conditi
     st = []
     stl = []
 
-    my_bar = streamlit.progress(0)
+    # my_bar = streamlit.progress(0)
     while t <= TotalTimeLength:
         percent_complete = t / TotalTimeLength
-        my_bar.progress(percent_complete)
+        # my_bar.progress(percent_complete)
 
         ans, err = quad(f, 0, t, args=(t, mu, stddev, ArrivalRate), limit=500)
         total_probability = 0
@@ -339,12 +339,12 @@ def ed_run(ED_length_of_stay_mean, ED_length_of_stay_std, ED_initial_condition, 
     st = []
     stl = []
 
-    my_bar = streamlit.progress(0)
+    # my_bar = streamlit.progress(0)
 
     while t <= TotalTimeLength:
         print(t)
         percent_complete = t / TotalTimeLength
-        my_bar.progress(percent_complete)
+        # my_bar.progress(percent_complete)
         ans, err = quad(f, 0, t, args=(t, mu, stddev, ArrivalRate), limit=500)
         total_probability = 0
         probability_still_in_system = 1 - rs(t, mu, stddev, ED_length_of_stay_mean)
