@@ -109,64 +109,75 @@ if st.checkbox("Click here to see sample output"):
     img3 = Image.open(r"Sample.jpeg")
     st.image(img3, width=720)
 
+
 st.sidebar.subheader("Click for SIR Model or Upload Files")
-if st.sidebar.checkbox("Use SIR Model"):
-    current_hospitalized = int(st.sidebar.text_input("Current Hospitalized Patients", value=50))
-    doubling_time = float(st.sidebar.text_input("Doubling Time", value=8))
-    hospitalized_rate = float(st.sidebar.text_input("Hospitalized Rate (%)", value=10))
-    infectious_days = int(st.sidebar.text_input("Infectious Days", value=10))
-    market_share = float(st.sidebar.text_input("Hospital Market Share (%)", value=30))
-    n_days = int(st.sidebar.text_input("n_days", value=20))
-    population = float(st.sidebar.text_input("Regional Population", value=100000))
-    recovered = int(st.sidebar.text_input("Recovered Patients", value=200))
-    mitigation_date = st.sidebar.text_input("Mitigation Date (YYYY-MM-DD)", value=datetime.date(2020, 10, 8))
-    relative_contact_rate = float(st.sidebar.text_input("Relative Contact Rate (%)", value=50))
-    arriving_rate = float(st.sidebar.text_input("Arriving Rate (%)", value=50))
-
-    hourly_ratio = st.sidebar.text_input("Hourly Ratio (Only for ED: input ratio for 24 hrs)")
-    hourly_ratio = hourly_ratio.split(":")
-    hourly_distribution = []
-    # st.write(type(hourly_ratio[1]))
-    # st.write(type(int(hourly_ratio[1])))
-    for i in hourly_ratio:
-        hourly_distribution.append(int(i))
-    # st.write(hourly_distribution)
-    # st.write(type(hourly_distribution))
-    # a = np.array(hourly_distribution)
-
-    p = sir.parameter(current_hospitalized, doubling_time, hospitalized_rate, infectious_days, market_share,
-                      n_days, population, recovered, mitigation_date, relative_contact_rate, arriving_rate)
-    r_daily = sir.Sir(p).get_prediction()
-
-    p_hourly = sir.parameter(current_hospitalized, doubling_time, hospitalized_rate, infectious_days, market_share,
-                             n_days, population, recovered, mitigation_date, relative_contact_rate, arriving_rate,
-                             hourly_distribution)
-    r_hourly = sir.Sir(p_hourly).get_hourly_prediction()
-    st.write(r_hourly)
-
-    s = sir.Sir(p).get_SIR_model()
-    sir_data = pd.DataFrame(
-        {
-            "Susceptible": s[0],
-            "Infected": s[1],
-            "Recovered": s[2]
-        }
-    )
-    st.subheader("SIR")
-    st.line_chart(sir_data)
-
-    # st.markdown("The estimated number of currently infected individuals is $16888. "
-    #             "This is based on current inputs for Hospitalizations ($69), Hospitalization rate ($2%), "
-    #             "Regional population ($3600000), and Hospital market share ($15%)."
-    #             "An initial doubling time of $5.0 days and a recovery time of $10 days imply an $R_0 of $2.49 "
-    #             "and daily growth rate of $14.87%.")
-
 
 if st.sidebar.checkbox("Upload Files"):
     f_daily = st.sidebar.file_uploader("Update Daily Arrival Predictions", key="D", type="txt")
     f_hourly = st.sidebar.file_uploader("Update ED Hourly Arrival Predictions", key="H", type="txt")
     r_daily = open_file(f_daily)
     r_hourly = open_file(f_hourly)
+
+if st.sidebar.checkbox("Use SIR Model"):
+    current_hospitalized = int(st.sidebar.text_input("Current Hospitalized Patients", value=50))
+    doubling_time = float(st.sidebar.text_input("Doubling Time", value=8))
+    hospitalized_rate = float(st.sidebar.text_input("Hospitalized Rate (%)", value=10))
+    infectious_days = int(st.sidebar.text_input("Infectious Days", value=10))
+    market_share = float(st.sidebar.text_input("Hospital Market Share (%)", value=30))
+    n_days = int(st.sidebar.text_input("Days To Predict From Today", value=20))
+    population = float(st.sidebar.text_input("Regional Population", value=100000))
+    recovered = int(st.sidebar.text_input("Recovered Patients", value=200))
+    mitigation_date = st.sidebar.text_input("Mitigation Date (YYYY-MM-DD)", value=datetime.date(2020, 10, 8))
+    relative_contact_rate = float(st.sidebar.text_input("Relative Contact Rate (%)", value=50))
+    arriving_rate = float(st.sidebar.text_input("Arriving Rate (%)", value=50))
+
+    hourly_ratio = st.sidebar.text_input("Hourly Ratio (Only for ED: input ratio for 24 hrs)（1:2:2:3:xxx)",
+                                         value=1)
+    hourly_ratio = hourly_ratio.split(":")
+    hourly_distribution = []
+    for i in hourly_ratio:
+        hourly_distribution.append(int(i))
+    # st.write(type(hourly_ratio[1]))
+    # st.write(type(int(hourly_ratio[1])))
+
+    # st.write(hourly_distribution)
+    # st.write(type(hourly_distribution))
+    # a = np.array(hourly_distribution)
+    if st.sidebar.checkbox("Submit SIR data for prediction"):
+        p = sir.parameter(current_hospitalized, doubling_time, hospitalized_rate, infectious_days, market_share,
+                          n_days, population, recovered, mitigation_date, relative_contact_rate, arriving_rate)
+        r_daily = sir.Sir(p).get_prediction()
+
+        p_hourly = sir.parameter(current_hospitalized, doubling_time, hospitalized_rate, infectious_days, market_share,
+                                 n_days, population, recovered, mitigation_date, relative_contact_rate, arriving_rate,
+                                 hourly_distribution)
+        r_hourly = sir.Sir(p_hourly).get_hourly_prediction()
+        # st.write(r_hourly)
+    if st.sidebar.checkbox("Click here to display SIR plot"):
+        p = sir.parameter(current_hospitalized, doubling_time, hospitalized_rate, infectious_days, market_share,
+                          n_days, population, recovered, mitigation_date, relative_contact_rate, arriving_rate)
+        s = sir.Sir(p).get_SIR_model()
+        sir_data = pd.DataFrame(
+            {
+                "Susceptible": s[0],
+                "Infected": s[1],
+                "Recovered": s[2]
+            }
+        )
+        st.subheader("SIR")
+        st.line_chart(sir_data)
+
+        st.markdown(f"The estimated number of currently infected individuals is {round(s[1][0])}. "
+                    f"This is based on current inputs for Hospitalizations {current_hospitalized}, "
+                    f"Hospitalization rate {hospitalized_rate}, Regional population {population}, "
+                    f"and Hospital market share {market_share}.")
+        st.markdown(f"An initial doubling time of {doubling_time} days and a recovery time of {infectious_days} days "
+                    f"imply an $R_0$ of {round(s[2][0])}.")
+#         st.markdown(f"Mitigation: A {relative_contact_rate} reduction in social contact after the onset of the "
+#                     "outbreak reduces the doubling time to 19.2 days, implying an effective R_t of 1.371.37
+#                     "and daily growth rate of 3.68%..")
+
+
 
 st.sidebar.subheader("ED")
 ed_mean = float(st.sidebar.text_input("Mean ED LOS (Hours)", value=7.5))
@@ -199,7 +210,9 @@ if st.sidebar.checkbox("Click here to display results", key="A"):
             )
             band.encoding.x.title = "Days"
             band.encoding.y.title = "Census"
-            st.markdown("The ")
+            st.markdown(f"The output is based on the ED staying hours with a mean of {ed_mean}, "
+                        f"standard deviation of {ed_std}, current ED patients {ed_initial}, "
+                        "and daily and hourly arrival rate according to SIR or uploaded files")
 
             line + band
             st.write(df)
@@ -239,6 +252,12 @@ if st.sidebar.checkbox("Click here to display results", key="B"):
             )
             band.encoding.x.title = "Days"
             band.encoding.y.title = "Census"
+
+            st.markdown(f"The output is based on the hospital staying hours with a mean of {h_mean}, "
+                        f"standard deviation of {h_std}, current hospital patients {h_initial},"
+                        f"percentage of hospitalized patients ({p_hos} "
+                        "and daily arrival rate according to SIR or uploaded files")
+
             line + band
             st.write(df)
 
@@ -279,6 +298,11 @@ if st.sidebar.checkbox("Click here to display results", key="C"):
             )
             band.encoding.x.title = "Days"
             band.encoding.y.title = "Census"
+            st.markdown(f"The output is based on the hospital staying hours with a mean of {icu_mean}, "
+                        f"standard deviation of {icu_std}, current hospital patients {icu_initial}, "
+                        f"percentage of patients that needed ICU ({p_icu}),"
+                        "and daily arrival rate according to SIR or uploaded files")
+
             line + band
             st.write(df)
 
