@@ -13,7 +13,7 @@ import streamlit
 global lognorm
 
 
-@jit
+#@jit
 def lognorm(x, mu, sigma):
     a = (log(x) - mu) / sqrt(2 * sigma ** 2)
     p = 0.5 + 0.5 * erf(a)
@@ -23,7 +23,7 @@ def lognorm(x, mu, sigma):
 global lognormc
 
 
-@jit
+#@jit
 def lognormc(x, mu, sigma):
     return 1 - lognorm(x, mu, sigma)
 
@@ -31,7 +31,7 @@ def lognormc(x, mu, sigma):
 global f
 
 
-@jit
+#@jit
 def f(s, t, mu, stddev, Arrival_rate):
     hourofday = floor((t - s) % 24)
     p = flambda(t - s, Arrival_rate) * (1 - lognorm(s, mu, stddev))
@@ -41,7 +41,7 @@ def f(s, t, mu, stddev, Arrival_rate):
 global flambda
 
 
-@jit
+#@jit
 def flambda(x, Arrival_rate):
     p = floor(x)
     return Arrival_rate[p]
@@ -55,7 +55,7 @@ def rs(x, mu, stddev, length_of_stay_mean):
     return temp_int / length_of_stay_mean
 
 
-@jit
+#@jit
 def maxc(datalist):
     temp = max(datalist)
     if temp <= 0:
