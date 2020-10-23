@@ -2,7 +2,7 @@ import pandas as pd
 from numpy import log, square, sqrt, random, mean, inf, loadtxt, array
 from numba import jit
 from math import ceil, erf, floor
-from prettytable import PrettyTable
+#from prettytable import PrettyTable
 from scipy.integrate import quad
 from scipy.stats import norm, binom, poisson, lognorm
 import matplotlib.pyplot as plt
