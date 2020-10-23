@@ -61,8 +61,8 @@ def download_link(object_to_download, download_filename, download_link_text):
 
 st.set_option('deprecation.showfileUploaderEncoding', False)
 
-img = Image.open(r"logo.png")
-st.image(img)
+# img = Image.open(r"logo.png")
+# st.image(img)
 st.title('COVID-CAT')
 
 st.markdown("COVID-CAT is a tool for hospital and emergency department (ED) managers, physicians, "
@@ -87,8 +87,8 @@ if st.checkbox("Click here to see methodology", key="M"):
                 "occupying a bed in the hospital and/or the ICU right after the patient’s stay in the ED is over "
                 "and therefore the model would be biased towards capturing the bed demand in the hospital "
                 "and the ICU slightly early.")
-    img2 = Image.open(r"Patient-Flow.png")
-    st.image(img2, width=720)
+    # img2 = Image.open(r"Patient-Flow.png")
+    # st.image(img2, width=720)
 
     st.markdown("The methodology behind COVID-CAT is based on known results from queueing theory, "
                 "more specifically the analysis of the $M_t/G/\infty$ queue, which assumes Poisson arrivals "
@@ -105,9 +105,9 @@ if st.checkbox("Click here to see methodology", key="M"):
                 "the excess demand. By not making specific assumptions on bed capacities as well as such "
                 "policy choices, we aim to make the tool useful not only for UNC but other EDs and hospitals as well.")
 
-if st.checkbox("Click here to see sample output"):
-    img3 = Image.open(r"Sample.jpeg")
-    st.image(img3, width=720)
+# if st.checkbox("Click here to see sample output"):
+#     img3 = Image.open(r"Sample.jpeg")
+#     st.image(img3, width=720)
 
 
 st.sidebar.subheader("Click for SIR Model or Upload Files")
