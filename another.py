@@ -2,7 +2,7 @@ import pandas as pd
 from numpy import log, square, sqrt, random, mean, inf, loadtxt, array
 from numba import jit
 from math import ceil, erf, floor
-from prettytable import PrettyTable
+#from prettytable import PrettyTable
 from scipy.integrate import quad
 from scipy.stats import norm, binom, poisson, lognorm
 import matplotlib.pyplot as plt
@@ -13,7 +13,7 @@ import streamlit
 global lognorm
 
 
-@jit
+#@jit
 def lognorm(x, mu, sigma):
     a = (log(x) - mu) / sqrt(2 * sigma ** 2)
     p = 0.5 + 0.5 * erf(a)
@@ -23,7 +23,7 @@ def lognorm(x, mu, sigma):
 global lognormc
 
 
-@jit
+#@jit
 def lognormc(x, mu, sigma):
     return 1 - lognorm(x, mu, sigma)
 
@@ -31,7 +31,7 @@ def lognormc(x, mu, sigma):
 global f
 
 
-@jit
+#@jit
 def f(s, t, mu, stddev, Arrival_rate):
     hourofday = floor((t - s) % 24)
     p = flambda(t - s, Arrival_rate) * (1 - lognorm(s, mu, stddev))
@@ -41,7 +41,7 @@ def f(s, t, mu, stddev, Arrival_rate):
 global flambda
 
 
-@jit
+#@jit
 def flambda(x, Arrival_rate):
     p = floor(x)
     return Arrival_rate[p]
@@ -55,7 +55,7 @@ def rs(x, mu, stddev, length_of_stay_mean):
     return temp_int / length_of_stay_mean
 
 
-@jit
+#@jit
 def maxc(datalist):
     temp = max(datalist)
     if temp <= 0:
@@ -92,8 +92,11 @@ def hos_run(Hospital_length_of_stay_mean, Hospital_length_of_stay_std, Hospital_
     st = []
     stl = []
 
+    my_bar = streamlit.progress(0)
     while t <= TotalTimeLength:
-        print(t)
+        percent_complete = t / TotalTimeLength
+        my_bar.progress(percent_complete)
+        # print(t)
         ans, err = quad(f, 0, t, args=(t, mu, stddev, ArrivalRate))
         total_probability = 0
         probability_still_in_system = 1 - rs(t, mu, stddev, Hospital_length_of_stay_mean)
