@@ -16,21 +16,9 @@ import another
 import sir
 
 
-def valid_input_number(num):
-    try:
-        float(num)
-    except:
-        st.sidebar.error("Error! Not a number.")
-
-
 def valid_input_range(num):
-    try:
-        float(num)
-    except:
-        st.sidebar.error("Error! Not a number")
-    else:
-        if float(num) < 0 or float(num) > 100:
-            st.sidebar.error("Error! Please put a number between 0 and 100.")
+    if num < 0 or num > 100:
+        st.sidebar.error("Error! Please put a number between 0 and 100.")
 
 
 @st.cache
@@ -61,15 +49,13 @@ def download_link(object_to_download, download_filename, download_link_text):
 
 st.set_option('deprecation.showfileUploaderEncoding', False)
 
-img = Image.open(r"logo.png")
-st.image(img)
+# img = Image.open(r"logo.png")
+# st.image(img)
 st.title('COVID-CAT')
 
 st.markdown("COVID-CAT is a tool for hospital and emergency department (ED) managers, physicians, "
             "and health care workers to quickly convert predictions of future COVID-19 patient arrivals "
             "into predictions of future COVID-19 census levels in the ED, main hospital, and the ICU. ")
-
-# st.markdown("Below is a screen-shot of the COVID-CAT output when it is run with hypothetical data and estimates.")
 
 link = '[A complete description of the methodology is provided here]' \
        '(https://covidcat.web.unc.edu/files/2020/06/COVID-CAT.pdf)'
@@ -87,8 +73,8 @@ if st.checkbox("Click here to see methodology", key="M"):
                 "occupying a bed in the hospital and/or the ICU right after the patient’s stay in the ED is over "
                 "and therefore the model would be biased towards capturing the bed demand in the hospital "
                 "and the ICU slightly early.")
-    img2 = Image.open(r"Patient-Flow.png")
-    st.image(img2, width=720)
+    # img2 = Image.open(r"Patient-Flow.png")
+    # st.image(img2, width=720)
 
     st.markdown("The methodology behind COVID-CAT is based on known results from queueing theory, "
                 "more specifically the analysis of the $M_t/G/\infty$ queue, which assumes Poisson arrivals "
@@ -105,12 +91,62 @@ if st.checkbox("Click here to see methodology", key="M"):
                 "the excess demand. By not making specific assumptions on bed capacities as well as such "
                 "policy choices, we aim to make the tool useful not only for UNC but other EDs and hospitals as well.")
 
-if st.checkbox("Click here to see sample output"):
-    img3 = Image.open(r"Sample.jpeg")
-    st.image(img3, width=720)
-
-
 st.sidebar.subheader("Click for SIR Model or Upload Files")
+
+st.sidebar.subheader("SIR")
+current_hospitalized = st.sidebar.number_input("Current Hospitalized Patients", value=50)
+doubling_time = st.sidebar.number_input("Doubling Time in Days (Up to Today)", value=8)
+hospitalized_rate = st.sidebar.number_input("Hospitalized Rate (%)", value=10.0)
+infectious_days = st.sidebar.number_input("Infectious Days", value=10)
+market_share = st.sidebar.number_input("Hospital Market Share (%)", value=30)
+n_days = st.sidebar.number_input("Days To Predict From Today", value=20)
+population = st.sidebar.number_input("Regional Population", value=100000)
+recovered = st.sidebar.number_input("Recovered Patients", value=200)
+mitigation_date = st.sidebar.text_input("Mitigation Date (YYYY-MM-DD)", value=datetime.date(2020, 10, 8))
+relative_contact_rate = st.sidebar.number_input("Relative Contact Rate (%)", value=50.0)
+arriving_rate = st.sidebar.number_input("Arriving Rate (%)", value=50.0)
+
+hourly_ratio = st.sidebar.text_input("Hourly Ratio (Only for ED: input ratio for 24 hrs)（1:2:2:3:xxx)",
+                                     value=1)
+hourly_ratio = hourly_ratio.split(":")
+hourly_distribution = []
+for i in hourly_ratio:
+    hourly_distribution.append(int(i))
+    # st.write(type(hourly_ratio[1]))
+    # st.write(type(int(hourly_ratio[1])))
+
+    # st.write(hourly_distribution)
+    # st.write(type(hourly_distribution))
+    # a = np.array(hourly_distribution)
+p = sir.parameter(current_hospitalized, doubling_time, hospitalized_rate, infectious_days, market_share,
+                  n_days, population, recovered, mitigation_date, relative_contact_rate, arriving_rate)
+s = sir.Sir(p).get_SIR_model()
+sir_data = pd.DataFrame(
+    {
+        "Susceptible": s[0],
+        "Infected": s[1],
+        "Recovered": s[2]
+    }
+)
+st.subheader("SIR")
+st.line_chart(sir_data)
+
+st.markdown(f"The estimated number of currently infected individuals is {round(s[1][0])}. "
+            f"This is based on current inputs for Hospitalizations {current_hospitalized}, "
+            f"Hospitalization rate {hospitalized_rate}, Regional population {population}, "
+            f"and Hospital market share {market_share}.")
+st.markdown(f"An initial doubling time of {doubling_time} days and a recovery time of {infectious_days} days "
+            f"imply an $R_0$ of {round(s[2][0])}.")
+
+if st.sidebar.checkbox("Use SIR model for prediction"):
+    p = sir.parameter(current_hospitalized, doubling_time, hospitalized_rate, infectious_days, market_share,
+                      n_days, population, recovered, mitigation_date, relative_contact_rate, arriving_rate)
+    r_daily = sir.Sir(p).get_prediction()
+
+    p_hourly = sir.parameter(current_hospitalized, doubling_time, hospitalized_rate, infectious_days, market_share,
+                             n_days, population, recovered, mitigation_date, relative_contact_rate, arriving_rate,
+                             hourly_distribution)
+    r_hourly = sir.Sir(p_hourly).get_hourly_prediction()
 
 if st.sidebar.checkbox("Upload Files"):
     f_daily = st.sidebar.file_uploader("Update Daily Arrival Predictions", key="D", type="txt")
@@ -118,81 +154,33 @@ if st.sidebar.checkbox("Upload Files"):
     r_daily = open_file(f_daily)
     r_hourly = open_file(f_hourly)
 
-if st.sidebar.checkbox("Use SIR Model"):
-    current_hospitalized = int(st.sidebar.text_input("Current Hospitalized Patients", value=50))
-    doubling_time = float(st.sidebar.text_input("Doubling Time", value=8))
-    hospitalized_rate = float(st.sidebar.text_input("Hospitalized Rate (%)", value=10))
-    infectious_days = int(st.sidebar.text_input("Infectious Days", value=10))
-    market_share = float(st.sidebar.text_input("Hospital Market Share (%)", value=30))
-    n_days = int(st.sidebar.text_input("Days To Predict From Today", value=20))
-    population = float(st.sidebar.text_input("Regional Population", value=100000))
-    recovered = int(st.sidebar.text_input("Recovered Patients", value=200))
-    mitigation_date = st.sidebar.text_input("Mitigation Date (YYYY-MM-DD)", value=datetime.date(2020, 10, 8))
-    relative_contact_rate = float(st.sidebar.text_input("Relative Contact Rate (%)", value=50))
-    arriving_rate = float(st.sidebar.text_input("Arriving Rate (%)", value=50))
-
-    hourly_ratio = st.sidebar.text_input("Hourly Ratio (Only for ED: input ratio for 24 hrs)（1:2:2:3:xxx)",
-                                         value=1)
-    hourly_ratio = hourly_ratio.split(":")
-    hourly_distribution = []
-    for i in hourly_ratio:
-        hourly_distribution.append(int(i))
-    # st.write(type(hourly_ratio[1]))
-    # st.write(type(int(hourly_ratio[1])))
-
-    # st.write(hourly_distribution)
-    # st.write(type(hourly_distribution))
-    # a = np.array(hourly_distribution)
-    if st.sidebar.checkbox("Submit SIR data for prediction"):
-        p = sir.parameter(current_hospitalized, doubling_time, hospitalized_rate, infectious_days, market_share,
-                          n_days, population, recovered, mitigation_date, relative_contact_rate, arriving_rate)
-        r_daily = sir.Sir(p).get_prediction()
-
-        p_hourly = sir.parameter(current_hospitalized, doubling_time, hospitalized_rate, infectious_days, market_share,
-                                 n_days, population, recovered, mitigation_date, relative_contact_rate, arriving_rate,
-                                 hourly_distribution)
-        r_hourly = sir.Sir(p_hourly).get_hourly_prediction()
-        # st.write(r_hourly)
-    if st.sidebar.checkbox("Click here to display SIR plot"):
-        p = sir.parameter(current_hospitalized, doubling_time, hospitalized_rate, infectious_days, market_share,
-                          n_days, population, recovered, mitigation_date, relative_contact_rate, arriving_rate)
-        s = sir.Sir(p).get_SIR_model()
-        sir_data = pd.DataFrame(
-            {
-                "Susceptible": s[0],
-                "Infected": s[1],
-                "Recovered": s[2]
-            }
-        )
-        st.subheader("SIR")
-        st.line_chart(sir_data)
-
-        st.markdown(f"The estimated number of currently infected individuals is {round(s[1][0])}. "
-                    f"This is based on current inputs for Hospitalizations {current_hospitalized}, "
-                    f"Hospitalization rate {hospitalized_rate}, Regional population {population}, "
-                    f"and Hospital market share {market_share}.")
-        st.markdown(f"An initial doubling time of {doubling_time} days and a recovery time of {infectious_days} days "
-                    f"imply an $R_0$ of {round(s[2][0])}.")
-#         st.markdown(f"Mitigation: A {relative_contact_rate} reduction in social contact after the onset of the "
-#                     "outbreak reduces the doubling time to 19.2 days, implying an effective R_t of 1.371.37
-#                     "and daily growth rate of 3.68%..")
-
 st.sidebar.subheader("ED")
-ed_mean = float(st.sidebar.text_input("Mean ED LOS (Hours)", value=7.5))
-valid_input_number(ed_mean)
-ed_std = float(st.sidebar.text_input("STD. ED LOS (Hours)", value=8.2))
-valid_input_number(ed_std)
-ed_initial = float(st.sidebar.text_input("Current Census (Patients)", value=8, key="E"))
-valid_input_number(ed_initial)
+ed_mean = st.sidebar.number_input("Mean ED LOS (Hours)", value=7.5)
+ed_std = st.sidebar.number_input("STD. ED LOS (Hours)", value=8.2)
+ed_initial = st.sidebar.number_input("Current Census (Patients)", value=8, key="E")
 
+st.sidebar.subheader("Hospital")
+h_mean = st.sidebar.number_input("Mean H LOS (Days)", value=8)
+h_std = st.sidebar.number_input("STD. H LOS (Days)", value=6)
+h_initial = st.sidebar.number_input("Current Census (Patients)", value=15, key="HOS")
+p_hos = st.sidebar.number_input("% COVID Patients Hospitalized:", value=30) / 100
+valid_input_range(p_hos)
 
-if st.sidebar.checkbox("Click here to display results", key="A"):
-    if ed_mean != 0 and ed_std != 0:
+st.sidebar.subheader("ICU")
+icu_mean = st.sidebar.number_input("Mean ICU LOS (Days)", value=13)
+icu_std = st.sidebar.number_input("STD. ICU LOS (Days)", value=8)
+icu_initial = st.sidebar.number_input("Current Census (Patients)", value=3, key="ICU")
+p_icu = st.sidebar.number_input("% COVID Patients Need ICU:", value=6) / 100
+valid_input_range(p_icu)
+
+# r_daily = [40.79408289, 43.51368842, 46.67691754, 52.21256851, 57.36245982, 65.1933807,
+#            69.24385702, 73.68009298, 77.53768947, 79.46648772, 80.43088684]
+
+if st.sidebar.button("run"):
+    if ed_mean != 0 and ed_std != 0 and r_hourly is not None and r_daily is not None:
         with st.spinner("Running .. progress shown here"):
-
             st.subheader("ED")
-            if r_daily is not None and r_hourly is not None:
-                tlist, mt, mt5, mt95, df = another.ed_run(ed_mean, ed_std, ed_initial, r_daily, r_hourly)
+            tlist, mt, mt5, mt95, df = another.ed_run(ed_mean, ed_std, ed_initial, r_daily, r_hourly)
             dfr = pd.DataFrame(list(zip(mt, mt5, mt95)),
                                columns=["Mean", "Lower", "Upper"],
                                index=pd.RangeIndex(len(tlist), name="x"))
@@ -217,21 +205,9 @@ if st.sidebar.checkbox("Click here to display results", key="A"):
             if df is not None:
                 tmp_download_link = download_link(df, 'ED_data.csv', 'Click here to download the data report')
                 st.markdown(tmp_download_link, unsafe_allow_html=True)
-    else:
-        st.warning("invalid parameter for ED")
 
-st.sidebar.subheader("Hospital")
-h_mean = float(st.sidebar.text_input("Mean H LOS (Days)", value=8))
-valid_input_number(h_mean)
-h_std = float(st.sidebar.text_input("STD. H LOS (Days)", value=6))
-valid_input_number(h_std)
-h_initial = float(st.sidebar.text_input("Current Census (Patients)", value=15, key="HOS"))
-valid_input_number(h_initial)
-p_hos = float(st.sidebar.text_input("% COVID Patients Hospitalized:", value=30)) / 100
-valid_input_range(p_hos)
-
-if st.sidebar.checkbox("Click here to display results", key="B"):
-    if h_mean != 0 and h_std != 0:  # and r_daily is not None and p_hos != 0:
+    # if st.sidebar.checkbox("Click here to display results", key="B"):
+    if h_mean != 0 and h_std != 0 and r_daily is not None and p_hos != 0:
         with st.spinner("Running .. progress shown here"):
             st.subheader("Hospital")
             tlist, mt, mt5, mt95, df = another.hos_run(h_mean, h_std, h_initial, r_daily, p_hos)
@@ -262,20 +238,6 @@ if st.sidebar.checkbox("Click here to display results", key="B"):
                 tmp_download_link = download_link(df, 'hospital_data.csv', 'Click here to download the data report')
                 st.markdown(tmp_download_link, unsafe_allow_html=True)
 
-    else:
-        st.warning("invalid parameter for Hospital")
-
-st.sidebar.subheader("ICU")
-icu_mean = float(st.sidebar.text_input("Mean ICU LOS (Days)", value=13))
-valid_input_number(icu_mean)
-icu_std = float(st.sidebar.text_input("STD. ICU LOS (Days)", value=8))
-valid_input_number(icu_std)
-icu_initial = float(st.sidebar.text_input("Current Census (Patients)", value=3, key="ICU"))
-valid_input_number(icu_initial)
-p_icu = float(st.sidebar.text_input("% COVID Patients Need ICU:", value=6)) / 100
-valid_input_range(p_icu)
-
-if st.sidebar.checkbox("Click here to display results", key="C"):
     if icu_mean != 0 and icu_std != 0 and r_daily is not None and p_icu != 0:
         with st.spinner("Running .. progress shown here"):
             st.subheader("ICU")
@@ -306,6 +268,3 @@ if st.sidebar.checkbox("Click here to display results", key="C"):
             if df is not None:
                 tmp_download_link = download_link(df, 'hospital_data.csv', 'Click here to download the data report')
                 st.markdown(tmp_download_link, unsafe_allow_html=True)
-
-    else:
-        st.warning("invalid parameter for ICU")
