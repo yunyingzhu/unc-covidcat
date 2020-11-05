@@ -91,68 +91,20 @@ if st.checkbox("Click here to see methodology", key="M"):
                 "the excess demand. By not making specific assumptions on bed capacities as well as such "
                 "policy choices, we aim to make the tool useful not only for UNC but other EDs and hospitals as well.")
 
-st.sidebar.subheader("Click for SIR Model or Upload Files")
+st.sidebar.subheader("Upload Files")
+f_daily = st.sidebar.file_uploader("Update Daily Arrival Predictions", key="D", type="txt")
+f_hourly = st.sidebar.file_uploader("Update ED Hourly Arrival Predictions", key="H", type="txt")
+r_daily = open_file(f_daily)
+r_hourly = open_file(f_hourly)
+# st.write(len(r_daily) * 24)
 
-st.sidebar.subheader("SIR")
-current_hospitalized = st.sidebar.number_input("Current Hospitalized Patients", value=50)
-doubling_time = st.sidebar.number_input("Doubling Time in Days (Up to Today)", value=8)
-hospitalized_rate = st.sidebar.number_input("Hospitalized Rate (%)", value=10.0)
-infectious_days = st.sidebar.number_input("Infectious Days", value=10)
-market_share = st.sidebar.number_input("Hospital Market Share (%)", value=30)
-n_days = st.sidebar.number_input("Days To Predict From Today", value=20)
-population = st.sidebar.number_input("Regional Population", value=100000)
-recovered = st.sidebar.number_input("Recovered Patients", value=200)
-mitigation_date = st.sidebar.text_input("Mitigation Date (YYYY-MM-DD)", value=datetime.date(2020, 10, 8))
-relative_contact_rate = st.sidebar.number_input("Relative Contact Rate (%)", value=50.0)
-arriving_rate = st.sidebar.number_input("Arriving Rate (%)", value=50.0)
+# st.write(r_daily)
+# st.write(type(r_daily))
+# st.write(r_hourly)
+# st.write(type(r_hourly))
 
-hourly_ratio = st.sidebar.text_input("Hourly Ratio (Only for ED: input ratio for 24 hrs)（1:2:2:3:xxx)",
-                                     value=1)
-hourly_ratio = hourly_ratio.split(":")
-hourly_distribution = []
-for i in hourly_ratio:
-    hourly_distribution.append(int(i))
-    # st.write(type(hourly_ratio[1]))
-    # st.write(type(int(hourly_ratio[1])))
-
-    # st.write(hourly_distribution)
-    # st.write(type(hourly_distribution))
-    # a = np.array(hourly_distribution)
-p = sir.parameter(current_hospitalized, doubling_time, hospitalized_rate, infectious_days, market_share,
-                  n_days, population, recovered, mitigation_date, relative_contact_rate, arriving_rate)
-s = sir.Sir(p).get_SIR_model()
-sir_data = pd.DataFrame(
-    {
-        "Susceptible": s[0],
-        "Infected": s[1],
-        "Recovered": s[2]
-    }
-)
-st.subheader("SIR")
-st.line_chart(sir_data)
-
-st.markdown(f"The estimated number of currently infected individuals is {round(s[1][0])}. "
-            f"This is based on current inputs for Hospitalizations {current_hospitalized}, "
-            f"Hospitalization rate {hospitalized_rate}, Regional population {population}, "
-            f"and Hospital market share {market_share}.")
-st.markdown(f"An initial doubling time of {doubling_time} days and a recovery time of {infectious_days} days "
-            f"imply an $R_0$ of {round(s[2][0])}.")
-
-if st.sidebar.checkbox("Use SIR model for prediction"):
-    p = sir.parameter(current_hospitalized, doubling_time, hospitalized_rate, infectious_days, market_share,
-                      n_days, population, recovered, mitigation_date, relative_contact_rate, arriving_rate)
-    r_daily = sir.Sir(p).get_prediction()
-
-    p_hourly = sir.parameter(current_hospitalized, doubling_time, hospitalized_rate, infectious_days, market_share,
-                             n_days, population, recovered, mitigation_date, relative_contact_rate, arriving_rate,
-                             hourly_distribution)
-    r_hourly = sir.Sir(p_hourly).get_hourly_prediction()
-
-if st.sidebar.checkbox("Upload Files"):
-    f_daily = st.sidebar.file_uploader("Update Daily Arrival Predictions", key="D", type="txt")
-    f_hourly = st.sidebar.file_uploader("Update ED Hourly Arrival Predictions", key="H", type="txt")
-    r_daily = open_file(f_daily)
-    r_hourly = open_file(f_hourly)
+st.sidebar.subheader("Maximum Patients")
+maxp = st.sidebar.number_input("Patients", value=45)
 
 st.sidebar.subheader("ED")
 ed_mean = st.sidebar.number_input("Mean ED LOS (Hours)", value=7.5)
@@ -173,98 +125,187 @@ icu_initial = st.sidebar.number_input("Current Census (Patients)", value=3, key=
 p_icu = st.sidebar.number_input("% COVID Patients Need ICU:", value=6) / 100
 valid_input_range(p_icu)
 
-# r_daily = [40.79408289, 43.51368842, 46.67691754, 52.21256851, 57.36245982, 65.1933807,
-#            69.24385702, 73.68009298, 77.53768947, 79.46648772, 80.43088684]
 
-if st.sidebar.button("run"):
+if st.sidebar.button("Run"):
     if ed_mean != 0 and ed_std != 0 and r_hourly is not None and r_daily is not None:
-        with st.spinner("Running .. progress shown here"):
-            st.subheader("ED")
-            tlist, mt, mt5, mt95, df = another.ed_run(ed_mean, ed_std, ed_initial, r_daily, r_hourly)
-            dfr = pd.DataFrame(list(zip(mt, mt5, mt95)),
-                               columns=["Mean", "Lower", "Upper"],
-                               index=pd.RangeIndex(len(tlist), name="x"))
-            line = alt.Chart(dfr.reset_index()).mark_line(color="#0E6678").encode(
-                x="x",
-                y="Mean",
-            )
-            band = line.mark_area(opacity=0.5, color="#9CD3E7").encode(
-                x='x',
-                y='Lower',
-                y2='Upper'
-            )
-            band.encoding.x.title = "Days"
-            band.encoding.y.title = "Census"
-            st.markdown(f"The output is based on the ED staying hours with a mean of {ed_mean}, "
-                        f"standard deviation of {ed_std}, current ED patients {ed_initial}, "
-                        "and daily and hourly arrival rate according to SIR or uploaded files")
+        # with st.spinner("Running .. progress shown here"):
+        st.subheader("ED")
+        tlist, mt, mt5, mt95, df = another.ed_run(ed_mean, ed_std, ed_initial, r_daily, r_hourly, maxp)
+        dfr = pd.DataFrame(list(zip(mt, mt5, mt95)),
+                           columns=["Mean", "Lower", "Upper"],
+                           index=pd.RangeIndex(len(tlist), name="x"))
+        line = alt.Chart(dfr.reset_index()).mark_line(color="#0E6678").encode(
+            x="x",
+            y="Mean",
+        )
+        band = line.mark_area(opacity=0.5, color="#9CD3E7").encode(
+            x='x',
+            y='Lower',
+            y2='Upper'
+        )
+        band.encoding.x.title = "Hours"
+        band.encoding.y.title = "Census"
+        st.markdown(f"The output is based on the ED staying hours with a mean of {ed_mean}, "
+                    f"standard deviation of {ed_std}, current ED patients {ed_initial}, "
+                    "and daily and hourly arrival rate according to uploaded files")
 
-            line + band
-            st.write(df)
+        line + band
+        st.write(df)
 
-            if df is not None:
-                tmp_download_link = download_link(df, 'ED_data.csv', 'Click here to download the data report')
-                st.markdown(tmp_download_link, unsafe_allow_html=True)
+        if df is not None:
+            tmp_download_link = download_link(df, 'ED_data.csv', 'Click here to download the data report')
+            st.markdown(tmp_download_link, unsafe_allow_html=True)
 
-    # if st.sidebar.checkbox("Click here to display results", key="B"):
     if h_mean != 0 and h_std != 0 and r_daily is not None and p_hos != 0:
-        with st.spinner("Running .. progress shown here"):
-            st.subheader("Hospital")
-            tlist, mt, mt5, mt95, df = another.hos_run(h_mean, h_std, h_initial, r_daily, p_hos)
-            dfr = pd.DataFrame(list(zip(mt, mt5, mt95)),
-                               columns=["Mean", "Lower", "Upper"],
-                               index=pd.RangeIndex(len(tlist), name="x"))
-            line = alt.Chart(dfr.reset_index()).mark_line(color="#0E6678").encode(
-                x="x",
-                y="Mean",
-            )
-            band = line.mark_area(opacity=0.5, color="#9CD3E7").encode(
-                x='x',
-                y='Lower',
-                y2='Upper'
-            )
-            band.encoding.x.title = "Days"
-            band.encoding.y.title = "Census"
+        # with st.spinner("Running .. progress shown here"):
+        st.subheader("Hospital")
+        tlist, mt, mt5, mt95, df = another.hos_run(h_mean, h_std, h_initial, r_daily, p_hos, maxp)
+        dfr = pd.DataFrame(list(zip(mt, mt5, mt95)),
+                           columns=["Mean", "Lower", "Upper"],
+                           index=pd.RangeIndex(len(tlist), name="x"))
+        line = alt.Chart(dfr.reset_index()).mark_line(color="#0E6678").encode(
+            x="x",
+            y="Mean",
+        )
+        band = line.mark_area(opacity=0.5, color="#9CD3E7").encode(
+            x='x',
+            y='Lower',
+            y2='Upper'
+        )
+        band.encoding.x.title = "Days"
+        band.encoding.y.title = "Census"
 
-            st.markdown(f"The output is based on the hospital staying hours with a mean of {h_mean}, "
-                        f"standard deviation of {h_std}, current hospital patients {h_initial},"
-                        f"percentage of hospitalized patients ({p_hos} "
-                        "and daily arrival rate according to SIR or uploaded files")
+        st.markdown(f"The output is based on the hospital staying hours with a mean of {h_mean}, "
+                    f"standard deviation of {h_std}, current hospital patients {h_initial},"
+                    f"percentage of hospitalized patients ({p_hos} "
+                    "and daily arrival rate according to uploaded files")
 
-            line + band
-            st.write(df)
+        line + band
+        st.write(df)
 
-            if df is not None:
-                tmp_download_link = download_link(df, 'hospital_data.csv', 'Click here to download the data report')
-                st.markdown(tmp_download_link, unsafe_allow_html=True)
+        if df is not None:
+            tmp_download_link = download_link(df, 'hospital_data.csv', 'Click here to download the data report')
+            st.markdown(tmp_download_link, unsafe_allow_html=True)
 
     if icu_mean != 0 and icu_std != 0 and r_daily is not None and p_icu != 0:
-        with st.spinner("Running .. progress shown here"):
-            st.subheader("ICU")
-            tlist, mt, mt5, mt95, df = another.icu_run(icu_mean, icu_std, icu_initial, r_daily, p_icu)
+        # with st.spinner("Running .. progress shown here"):
+        st.subheader("ICU")
+        tlist, mt, mt5, mt95, df = another.icu_run(icu_mean, icu_std, icu_initial, r_daily, p_icu, maxp)
 
-            dfr = pd.DataFrame(list(zip(mt, mt5, mt95)),
-                               columns=["Mean", "Lower", "Upper"],
-                               index=pd.RangeIndex(len(tlist), name="x"))
-            line = alt.Chart(dfr.reset_index()).mark_line(color="#0E6678").encode(
-                x="x",
-                y="Mean",
-            )
-            band = line.mark_area(opacity=0.5, color="#9CD3E7").encode(
-                x='x',
-                y='Lower',
-                y2='Upper'
-            )
-            band.encoding.x.title = "Days"
-            band.encoding.y.title = "Census"
-            st.markdown(f"The output is based on the hospital staying hours with a mean of {icu_mean}, "
-                        f"standard deviation of {icu_std}, current hospital patients {icu_initial}, "
-                        f"percentage of patients that needed ICU ({p_icu}),"
-                        "and daily arrival rate according to SIR or uploaded files")
+        dfr = pd.DataFrame(list(zip(mt, mt5, mt95)),
+                           columns=["Mean", "Lower", "Upper"],
+                           index=pd.RangeIndex(len(tlist), name="x"))
+        line = alt.Chart(dfr.reset_index()).mark_line(color="#0E6678").encode(
+            x="x",
+            y="Mean",
+        )
+        band = line.mark_area(opacity=0.5, color="#9CD3E7").encode(
+            x='x',
+            y='Lower',
+            y2='Upper'
+        )
+        band.encoding.x.title = "Days"
+        band.encoding.y.title = "Census"
+        st.markdown(f"The output is based on the hospital staying hours with a mean of {icu_mean}, "
+                    f"standard deviation of {icu_std}, current hospital patients {icu_initial}, "
+                    f"percentage of patients that needed ICU ({p_icu}),"
+                    "and daily arrival rate according to uploaded files")
 
-            line + band
-            st.write(df)
+        line + band
+        st.write(df)
 
-            if df is not None:
-                tmp_download_link = download_link(df, 'hospital_data.csv', 'Click here to download the data report')
-                st.markdown(tmp_download_link, unsafe_allow_html=True)
+        if df is not None:
+            tmp_download_link = download_link(df, 'hospital_data.csv', 'Click here to download the data report')
+            st.markdown(tmp_download_link, unsafe_allow_html=True)
+
+
+if st.sidebar.button("Run normal approximation"):
+    if ed_mean != 0 and ed_std != 0 and r_hourly is not None and r_daily is not None:
+        st.subheader("ED")
+        tlist, mt, mt5, mt95, df = another.ed_nor(ed_mean, ed_std, ed_initial, r_daily, r_hourly, maxp)
+        dfr = pd.DataFrame(list(zip(mt, mt5, mt95)),
+                           columns=["Mean", "Lower", "Upper"],
+                           index=pd.RangeIndex(len(tlist), name="x"))
+        line = alt.Chart(dfr.reset_index()).mark_line(color="#0E6678").encode(
+            x="x",
+            y="Mean",
+        )
+        band = line.mark_area(opacity=0.5, color="#9CD3E7").encode(
+            x='x',
+            y='Lower',
+            y2='Upper'
+        )
+        band.encoding.x.title = "Hours"
+        band.encoding.y.title = "Census"
+        st.markdown(f"The output is based on the ED staying hours with a mean of {ed_mean}, "
+                    f"standard deviation of {ed_std}, current ED patients {ed_initial}, "
+                    "and daily and hourly arrival rate according to uploaded files")
+
+        line + band
+        st.write(df)
+
+        if df is not None:
+            tmp_download_link = download_link(df, 'ED_data.csv', 'Click here to download the data report')
+            st.markdown(tmp_download_link, unsafe_allow_html=True)
+
+    if h_mean != 0 and h_std != 0 and r_daily is not None and p_hos != 0:
+        st.subheader("Hospital")
+        # st.write(type(r_daily))
+        tlist, mt, mt5, mt95, df = another.h_nor(h_mean, h_std, h_initial, r_daily, p_hos, maxp)
+        dfr = pd.DataFrame(list(zip(mt, mt5, mt95)),
+                           columns=["Mean", "Lower", "Upper"],
+                           index=pd.RangeIndex(len(tlist), name="x"))
+        line = alt.Chart(dfr.reset_index()).mark_line(color="#0E6678").encode(
+            x="x",
+            y="Mean",
+        )
+        band = line.mark_area(opacity=0.5, color="#9CD3E7").encode(
+            x='x',
+            y='Lower',
+            y2='Upper'
+        )
+        band.encoding.x.title = "Days"
+        band.encoding.y.title = "Census"
+
+        st.markdown(f"The output is based on the hospital staying hours with a mean of {h_mean}, "
+                    f"standard deviation of {h_std}, current hospital patients {h_initial},"
+                    f"percentage of hospitalized patients ({p_hos} "
+                    "and daily arrival rate according to uploaded files")
+
+        line + band
+        st.write(df)
+
+        if df is not None:
+            tmp_download_link = download_link(df, 'hospital_data.csv', 'Click here to download the data report')
+            st.markdown(tmp_download_link, unsafe_allow_html=True)
+
+    if icu_mean != 0 and icu_std != 0 and r_daily is not None and p_icu != 0:
+        st.subheader("ICU")
+        tlist, mt, mt5, mt95, df = another.icu_nor(icu_mean, icu_std, icu_initial, r_daily, p_icu, maxp)
+
+        dfr = pd.DataFrame(list(zip(mt, mt5, mt95)),
+                           columns=["Mean", "Lower", "Upper"],
+                           index=pd.RangeIndex(len(tlist), name="x"))
+        line = alt.Chart(dfr.reset_index()).mark_line(color="#0E6678").encode(
+            x="x",
+            y="Mean",
+        )
+        band = line.mark_area(opacity=0.5, color="#9CD3E7").encode(
+            x='x',
+            y='Lower',
+            y2='Upper'
+        )
+        band.encoding.x.title = "Days"
+        band.encoding.y.title = "Census"
+        st.markdown(f"The output is based on the hospital staying hours with a mean of {icu_mean}, "
+                    f"standard deviation of {icu_std}, current hospital patients {icu_initial}, "
+                    f"percentage of patients that needed ICU ({p_icu}),"
+                    "and daily arrival rate according to uploaded files")
+
+        line + band
+        st.write(df)
+
+        if df is not None:
+            tmp_download_link = download_link(df, 'hospital_data.csv', 'Click here to download the data report')
+            st.markdown(tmp_download_link, unsafe_allow_html=True)
+
