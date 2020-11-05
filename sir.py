@@ -63,7 +63,7 @@ class Sir:
         raw = []
         raw = self.get_SIR_arrays(self.init_susceptible,self.init_infected,self.init_recovered,self.dp,self.mitigation_date)
         self.sir = raw
-        I_difference = np.diff(raw[1])
+        I_difference = -np.diff(raw[0])
         self.disposition = I_difference * self.ms * self.arriving_rate
 
     def get_prediction(self):
@@ -116,6 +116,8 @@ class Sir:
         array_I[0] = init_I
         array_R[0] = init_R
 
+        if current_date > mitigation_date:
+            self.beta = self.beta_mitigated
         # the init_day has index 0, and first day after it has 1, then 2...
         for i in range(1,days+1):
             # if the date is moved to mitigation policy, then change beta
@@ -144,4 +146,3 @@ if __name__ == '__main__':
     my_sir = Sir(p);
     result = my_sir.get_hourly_prediction()
     print(result)
-
