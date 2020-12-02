@@ -65,7 +65,7 @@ def maxc(datalist):
 
 @streamlit.cache(suppress_st_warning=True)
 def hos_run(Hospital_length_of_stay_mean, Hospital_length_of_stay_std, Hospital_initial_condition, rate,
-            Percentage_hospitalized, maxp):
+            Percentage_hospitalized, h_capacity):
     mu = log(square(Hospital_length_of_stay_mean) / sqrt(
         square(Hospital_length_of_stay_mean) + square(Hospital_length_of_stay_mean)))
     stddev = sqrt(log(1 + square(Hospital_length_of_stay_mean) / square(Hospital_length_of_stay_mean)))
@@ -91,12 +91,12 @@ def hos_run(Hospital_length_of_stay_mean, Hospital_length_of_stay_std, Hospital_
     st = []
     stl = []
 
-    p1 = int(1 / 6 * maxp)
-    p2 = int(2 / 6 * maxp)
-    p3 = int(3 / 6 * maxp)
-    p4 = int(4 / 6 * maxp)
-    p5 = int(5 / 6 * maxp)
-    p6 = int(6 / 6 * maxp)
+    p1 = int(0.33333*h_capacity)
+    p2 = int(0.66666*h_capacity)
+    p3 = h_capacity
+    p4 = int(1.33333*h_capacity)
+    p5 = int(1.66666*h_capacity)
+    p6 = 2*h_capacity
 
     my_bar = streamlit.progress(0)
     while t <= TotalTimeLength:
@@ -201,7 +201,7 @@ def hos_run(Hospital_length_of_stay_mean, Hospital_length_of_stay_std, Hospital_
 
 
 @streamlit.cache(suppress_st_warning=True)
-def icu_run(ICU_length_of_stay_mean, ICU_length_of_stay_std, ICU_initial_condition, rate, Percentage_icu, maxp):
+def icu_run(ICU_length_of_stay_mean, ICU_length_of_stay_std, ICU_initial_condition, rate, Percentage_icu, icu_capacity):
     mu = log(square(ICU_length_of_stay_mean) / sqrt(
         square(ICU_length_of_stay_mean) + square(ICU_length_of_stay_mean)))
     stddev = sqrt(
@@ -230,12 +230,12 @@ def icu_run(ICU_length_of_stay_mean, ICU_length_of_stay_std, ICU_initial_conditi
     st = []
     stl = []
 
-    p1 = int(1 / 6 * maxp)
-    p2 = int(2 / 6 * maxp)
-    p3 = int(3 / 6 * maxp)
-    p4 = int(4 / 6 * maxp)
-    p5 = int(5 / 6 * maxp)
-    p6 = int(6 / 6 * maxp)
+    p1 = int(0.33333*icu_capacity)
+    p2 = int(0.66666*icu_capacity)
+    p3 = icu_capacity
+    p4 = int(1.33333*icu_capacity)
+    p5 = int(1.66666*icu_capacity)
+    p6 = 2*icu_capacity
 
     my_bar = streamlit.progress(0)
     while t <= TotalTimeLength:
@@ -338,7 +338,7 @@ def icu_run(ICU_length_of_stay_mean, ICU_length_of_stay_std, ICU_initial_conditi
 
 @streamlit.cache(suppress_st_warning=True)
 def ed_run(ED_length_of_stay_mean, ED_length_of_stay_std, ED_initial_condition, Daily_arrival_rate, Hourly_pattern,
-           maxp):
+           ed_capacity):
     mu = log(square(ED_length_of_stay_mean) / sqrt(
         square(ED_length_of_stay_mean) + square(ED_length_of_stay_mean)))
     stddev = sqrt(
@@ -370,12 +370,12 @@ def ed_run(ED_length_of_stay_mean, ED_length_of_stay_std, ED_initial_condition, 
     st = []
     stl = []
 
-    p1 = int(1 / 6 * maxp)
-    p2 = int(2 / 6 * maxp)
-    p3 = int(3 / 6 * maxp)
-    p4 = int(4 / 6 * maxp)
-    p5 = int(5 / 6 * maxp)
-    p6 = int(6 / 6 * maxp)
+    p1 = int(0.33333*ed_capacity)
+    p2 = int(0.66666*ed_capacity)
+    p3 = ed_capacity
+    p4 = int(1.33333*ed_capacity)
+    p5 = int(1.66666*ed_capacity)
+    p6 = 2*ed_capacity
     my_bar = streamlit.progress(0)
 
     while t <= TotalTimeLength:
@@ -488,7 +488,7 @@ def ed_run(ED_length_of_stay_mean, ED_length_of_stay_std, ED_initial_condition, 
 
 @streamlit.cache(suppress_st_warning=True)
 def h_nor(Hospital_length_of_stay_mean, Hospital_length_of_stay_std, Hospital_initial_condition, rate,
-            Percentage_hospitalized, maxp):
+            Percentage_hospitalized, h_capacity):
     mu = log(square(Hospital_length_of_stay_mean) / sqrt(
         square(Hospital_length_of_stay_mean) + square(Hospital_length_of_stay_mean)))
     stddev = sqrt(log(1 + square(Hospital_length_of_stay_mean) / square(Hospital_length_of_stay_mean)))
@@ -514,12 +514,12 @@ def h_nor(Hospital_length_of_stay_mean, Hospital_length_of_stay_std, Hospital_in
     st = []
     stl = []
 
-    p1 = int(1 / 6 * maxp)
-    p2 = int(2 / 6 * maxp)
-    p3 = int(3 / 6 * maxp)
-    p4 = int(4 / 6 * maxp)
-    p5 = int(5 / 6 * maxp)
-    p6 = int(6 / 6 * maxp)
+    p1 = int(0.33333*h_capacity)
+    p2 = int(0.66666*h_capacity)
+    p3 = h_capacity
+    p4 = int(1.33333*h_capacity)
+    p5 = int(1.66666*h_capacity)
+    p6 = 2*h_capacity
 
     my_bar = streamlit.progress(0)
     while t <= TotalTimeLength:
@@ -621,7 +621,7 @@ def h_nor(Hospital_length_of_stay_mean, Hospital_length_of_stay_std, Hospital_in
 
 
 @streamlit.cache(suppress_st_warning=True)
-def icu_nor(ICU_length_of_stay_mean, ICU_length_of_stay_std, ICU_initial_condition, rate, Percentage_icu, maxp):
+def icu_nor(ICU_length_of_stay_mean, ICU_length_of_stay_std, ICU_initial_condition, rate, Percentage_icu, icu_capacity):
     mu = log(square(ICU_length_of_stay_mean) / sqrt(
         square(ICU_length_of_stay_mean) + square(ICU_length_of_stay_mean)))
     stddev = sqrt(
@@ -650,12 +650,12 @@ def icu_nor(ICU_length_of_stay_mean, ICU_length_of_stay_std, ICU_initial_conditi
     st = []
     stl = []
 
-    p1 = int(1 / 6 * maxp)
-    p2 = int(2 / 6 * maxp)
-    p3 = int(3 / 6 * maxp)
-    p4 = int(4 / 6 * maxp)
-    p5 = int(5 / 6 * maxp)
-    p6 = int(6 / 6 * maxp)
+    p1 = int(0.33333*icu_capacity)
+    p2 = int(0.66666*icu_capacity)
+    p3 = icu_capacity
+    p4 = int(1.33333*icu_capacity)
+    p5 = int(1.66666*icu_capacity)
+    p6 = 2*icu_capacity
 
     my_bar = streamlit.progress(0)
     while t <= TotalTimeLength:
@@ -755,7 +755,7 @@ def icu_nor(ICU_length_of_stay_mean, ICU_length_of_stay_std, ICU_initial_conditi
 
 @streamlit.cache(suppress_st_warning=True)
 def ed_nor(ED_length_of_stay_mean, ED_length_of_stay_std, ED_initial_condition, Daily_arrival_rate, Hourly_pattern,
-           maxp):
+           ed_capacity):
     mu = log(square(ED_length_of_stay_mean) / sqrt(
         square(ED_length_of_stay_mean) + square(ED_length_of_stay_mean)))
     stddev = sqrt(
@@ -787,12 +787,12 @@ def ed_nor(ED_length_of_stay_mean, ED_length_of_stay_std, ED_initial_condition, 
     st = []
     stl = []
 
-    p1 = int(1 / 6 * maxp)
-    p2 = int(2 / 6 * maxp)
-    p3 = int(3 / 6 * maxp)
-    p4 = int(4 / 6 * maxp)
-    p5 = int(5 / 6 * maxp)
-    p6 = int(6 / 6 * maxp)
+    p1 = int(0.33333*ed_capacity)
+    p2 = int(0.66666*ed_capacity)
+    p3 = ed_capacity
+    p4 = int(1.33333*ed_capacity)
+    p5 = int(1.66666*ed_capacity)
+    p6 = 2*ed_capacity
     my_bar = streamlit.progress(0)
 
     while t <= TotalTimeLength:
