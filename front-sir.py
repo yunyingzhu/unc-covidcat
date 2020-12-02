@@ -144,13 +144,11 @@ r_daily = list(r_daily)
 # st.write(type(r_hourly))
 # st.write(len(r_daily))
 
-st.sidebar.subheader("Maximum Patients")
-maxp = st.sidebar.number_input("Patients", value=45)
-
 st.sidebar.subheader("ED")
 ed_mean = st.sidebar.number_input("Mean ED LOS (Hours)", value=7.5)
 ed_std = st.sidebar.number_input("STD. ED LOS (Hours)", value=8.2)
 ed_initial = st.sidebar.number_input("Current Census (Patients)", value=8, key="E")
+ed_capacity = st.sidebar.number_input("ED Bed Capacity", value=50)
 
 st.sidebar.subheader("Hospital")
 h_mean = st.sidebar.number_input("Mean H LOS (Days)", value=8)
@@ -158,6 +156,7 @@ h_std = st.sidebar.number_input("STD. H LOS (Days)", value=6)
 h_initial = st.sidebar.number_input("Current Census (Patients)", value=15, key="HOS")
 p_hos = st.sidebar.number_input("% COVID Patients Hospitalized:", value=30) / 100
 valid_input_range(p_hos)
+h_capacity = st.sidebar.number_input("Hospital Bed Capacity", value=100)
 
 st.sidebar.subheader("ICU")
 icu_mean = st.sidebar.number_input("Mean ICU LOS (Days)", value=13)
@@ -165,12 +164,13 @@ icu_std = st.sidebar.number_input("STD. ICU LOS (Days)", value=8)
 icu_initial = st.sidebar.number_input("Current Census (Patients)", value=3, key="ICU")
 p_icu = st.sidebar.number_input("% COVID Patients Need ICU:", value=6) / 100
 valid_input_range(p_icu)
+icu_capacity = st.sidebar.number_input("ICU Bed Capacity", value=20)
 
 if st.sidebar.button("Run normal approximation"):
     if ed_mean != 0 and ed_std != 0 and r_hourly is not None and r_daily is not None:
         st.subheader("ED")
 
-        tlist, mt, mt5, mt95, df = another.ed_nor(ed_mean, ed_std, ed_initial, r_daily, r_hourly, maxp)
+        tlist, mt, mt5, mt95, df = another.ed_nor(ed_mean, ed_std, ed_initial, r_daily, r_hourly, ed_capacity)
         # st.write(len(mt))
         # st.write(len(mt5))
         # st.write(len(mt95))
@@ -203,7 +203,7 @@ if st.sidebar.button("Run normal approximation"):
     if h_mean != 0 and h_std != 0 and r_daily is not None and p_hos != 0:
         st.subheader("Hospital")
         # st.write(type(r_daily)) list
-        tlist, mt, mt5, mt95, df = another.h_nor(h_mean, h_std, h_initial, r_daily, p_hos, maxp)
+        tlist, mt, mt5, mt95, df = another.h_nor(h_mean, h_std, h_initial, r_daily, p_hos, h_capacity)
 
         st.write(len(mt))
         st.write(len(mt5))
@@ -238,7 +238,7 @@ if st.sidebar.button("Run normal approximation"):
 
     if icu_mean != 0 and icu_std != 0 and r_daily is not None and p_icu != 0:
         st.subheader("ICU")
-        tlist, mt, mt5, mt95, df = another.icu_nor(icu_mean, icu_std, icu_initial, r_daily, p_icu, maxp)
+        tlist, mt, mt5, mt95, df = another.icu_nor(icu_mean, icu_std, icu_initial, r_daily, p_icu, icu_capacity)
 
         dfr = pd.DataFrame(list(zip(mt, mt5, mt95)),
                            columns=["Mean", "Lower", "Upper"],
@@ -270,7 +270,7 @@ if st.sidebar.button("Run"):
     if ed_mean != 0 and ed_std != 0 and r_hourly is not None and r_daily is not None:
         # with st.spinner("Running .. progress shown here"):
         st.subheader("ED")
-        tlist, mt, mt5, mt95, df = another.ed_run(ed_mean, ed_std, ed_initial, r_daily, r_hourly, maxp)
+        tlist, mt, mt5, mt95, df = another.ed_run(ed_mean, ed_std, ed_initial, r_daily, r_hourly, ed_capacity)
         dfr = pd.DataFrame(list(zip(mt, mt5, mt95)),
                            columns=["Mean", "Lower", "Upper"],
                            index=pd.RangeIndex(len(tlist), name="x"))
@@ -298,7 +298,7 @@ if st.sidebar.button("Run"):
 
     if h_mean != 0 and h_std != 0 and r_daily is not None and p_hos != 0:
         st.subheader("Hospital")
-        tlist, mt, mt5, mt95, df = another.hos_run(h_mean, h_std, h_initial, r_daily, p_hos, maxp)
+        tlist, mt, mt5, mt95, df = another.hos_run(h_mean, h_std, h_initial, r_daily, p_hos, h_capacity)
         dfr = pd.DataFrame(list(zip(mt, mt5, mt95)),
                            columns=["Mean", "Lower", "Upper"],
                            index=pd.RangeIndex(len(tlist), name="x"))
@@ -328,7 +328,7 @@ if st.sidebar.button("Run"):
 
     if icu_mean != 0 and icu_std != 0 and r_daily is not None and p_icu != 0:
         st.subheader("ICU")
-        tlist, mt, mt5, mt95, df = another.icu_run(icu_mean, icu_std, icu_initial, r_daily, p_icu, maxp)
+        tlist, mt, mt5, mt95, df = another.icu_run(icu_mean, icu_std, icu_initial, r_daily, p_icu, icu_capacity)
 
         dfr = pd.DataFrame(list(zip(mt, mt5, mt95)),
                            columns=["Mean", "Lower", "Upper"],
